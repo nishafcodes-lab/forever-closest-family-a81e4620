@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      gallery: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          photo_url: string
+          title: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          photo_url: string
+          title?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          photo_url?: string
+          title?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      group_members: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "student_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_members_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_photos: {
         Row: {
           group_name: string
@@ -35,6 +101,183 @@ export type Database = {
           photo_url?: string | null
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          author_email: string | null
+          author_name: string
+          created_at: string
+          id: string
+          message: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+        }
+        Insert: {
+          author_email?: string | null
+          author_name: string
+          created_at?: string
+          id?: string
+          message: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+        }
+        Update: {
+          author_email?: string | null
+          author_name?: string
+          created_at?: string
+          id?: string
+          message?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      reunion_info: {
+        Row: {
+          contact_email: string | null
+          contact_phone: string | null
+          countdown_enabled: boolean | null
+          description: string | null
+          id: string
+          reunion_date: string | null
+          updated_at: string
+          updated_by: string | null
+          venue: string | null
+          venue_address: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          countdown_enabled?: boolean | null
+          description?: string | null
+          id?: string
+          reunion_date?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          venue?: string | null
+          venue_address?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          countdown_enabled?: boolean | null
+          description?: string | null
+          id?: string
+          reunion_date?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          venue?: string | null
+          venue_address?: string | null
+        }
+        Relationships: []
+      }
+      student_groups: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          photo_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      students: {
+        Row: {
+          batch: string
+          bio: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          name: string
+          photo_url: string | null
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          batch?: string
+          bio?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          photo_url?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          batch?: string
+          bio?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          photo_url?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      teachers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          designation: string | null
+          id: string
+          name: string
+          photo_url: string | null
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          designation?: string | null
+          id?: string
+          name: string
+          photo_url?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          designation?: string | null
+          id?: string
+          name?: string
+          photo_url?: string | null
+          role?: string
+          updated_at?: string
         }
         Relationships: []
       }
