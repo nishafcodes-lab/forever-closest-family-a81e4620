@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Menu, X, GraduationCap } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Menu, X, GraduationCap, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const navLinks = [
   { name: "Home", href: "#home" },
@@ -34,6 +36,12 @@ const Navbar = () => {
                 {link.name}
               </a>
             ))}
+            <Link to="/admin/login">
+              <Button variant="outline" size="sm" className="gap-2">
+                <Shield className="w-4 h-4" />
+                Admin
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -58,6 +66,14 @@ const Navbar = () => {
                 {link.name}
               </a>
             ))}
+            <Link
+              to="/admin/login"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-2 py-2 text-muted-foreground hover:text-primary transition-colors duration-300"
+            >
+              <Shield className="w-4 h-4" />
+              Admin Panel
+            </Link>
           </div>
         )}
       </div>
