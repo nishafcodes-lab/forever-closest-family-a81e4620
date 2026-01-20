@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Menu, X, GraduationCap, Shield, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const navLinks = [
   { name: "Home", href: "#home" },
@@ -71,7 +72,7 @@ const Navbar = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4 }}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1"
             >
               <Link to="/students">
                 <Button variant="ghost" size="sm" className="gap-2 rounded-full">
@@ -85,17 +86,21 @@ const Navbar = () => {
                   Admin
                 </Button>
               </Link>
+              <ThemeToggle />
             </motion.div>
           </div>
 
           {/* Mobile Menu Button */}
-          <motion.button
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 text-foreground"
-            whileTap={{ scale: 0.95 }}
-          >
-            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </motion.button>
+          <div className="md:hidden flex items-center gap-2">
+            <ThemeToggle />
+            <motion.button
+              onClick={() => setIsOpen(!isOpen)}
+              className="p-2 text-foreground"
+              whileTap={{ scale: 0.95 }}
+            >
+              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </motion.button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
