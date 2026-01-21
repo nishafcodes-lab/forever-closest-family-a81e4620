@@ -1,10 +1,11 @@
-import { Calendar, MapPin, Clock, Users, Phone, Mail } from "lucide-react";
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { Calendar, MapPin, Clock, Users, Phone, Mail, RefreshCw } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { AnimatedSection, StaggerContainer, StaggerItem } from "@/components/ui/animated-section";
 import { FloatingParticles } from "@/components/ui/floating-particles";
+import { useToast } from "@/hooks/use-toast";
 
 interface ReunionInfo {
   reunion_date: string | null;
@@ -17,7 +18,10 @@ interface ReunionInfo {
 }
 
 const ReunionSection = () => {
+  const { toast } = useToast();
   const [reunionInfo, setReunionInfo] = useState<ReunionInfo | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const isFirstLoad = useRef(true);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -40,8 +44,22 @@ const ReunionSection = () => {
         },
         (payload) => {
           console.log("Reunion info updated:", payload);
+          // Show visual feedback
+          setIsUpdating(true);
+          
           // Refetch to get the latest data
-          fetchReunionInfo();
+          fetchReunionInfo().then(() => {
+            // Only show toast for subsequent updates, not first load
+            if (!isFirstLoad.current) {
+              toast({
+                title: "🔄 Event Updated",
+                description: "Reunion details have been refreshed",
+              });
+            }
+            
+            // Remove animation after a delay
+            setTimeout(() => setIsUpdating(false), 1500);
+          });
         }
       )
       .subscribe();
@@ -61,6 +79,7 @@ const ReunionSection = () => {
     if (data) {
       setReunionInfo(data);
     }
+    isFirstLoad.current = false;
   };
 
   useEffect(() => {
@@ -107,6 +126,21 @@ const ReunionSection = () => {
       <FloatingParticles count={15} />
       
       <div className="container mx-auto px-4 relative z-10">
+        {/* Realtime update indicator */}
+        <AnimatePresence>
+          {isUpdating && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground shadow-lg"
+            >
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              <span className="text-sm font-medium">Updating...</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <AnimatedSection className="text-center mb-16">
           <motion.div 
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent mb-4"
