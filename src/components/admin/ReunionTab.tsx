@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { format, isValid, parse } from "date-fns";
 
 interface ReunionInfo {
   id: string;
@@ -19,6 +20,20 @@ interface ReunionInfo {
   description: string | null;
   countdown_enabled: boolean;
 }
+
+const datetimeLocalToUtcIso = (value: string) => {
+  if (!value) return null;
+
+  // `datetime-local` emits a local-time string like: 2026-01-21T18:30
+  // Safari can be picky with Date parsing, so we parse explicitly.
+  const parsed = parse(value, "yyyy-MM-dd'T'HH:mm", new Date());
+  if (!isValid(parsed)) {
+    throw new Error("Invalid date/time. Please select the date again.");
+  }
+
+  // Store in UTC (TIMESTAMPTZ) for consistency.
+  return parsed.toISOString();
+};
 
 const ReunionTab = () => {
   const { user } = useAuth();
@@ -51,7 +66,10 @@ const ReunionTab = () => {
     if (data) {
       setReunionInfo(data);
       setFormData({
-        reunion_date: data.reunion_date ? data.reunion_date.slice(0, 16) : "",
+        // Convert stored UTC to a local `datetime-local` value
+        reunion_date: data.reunion_date
+          ? format(new Date(data.reunion_date), "yyyy-MM-dd'T'HH:mm")
+          : "",
         venue: data.venue || "",
         venue_address: data.venue_address || "",
         contact_email: data.contact_email || "",
@@ -60,6 +78,10 @@ const ReunionTab = () => {
         countdown_enabled: data.countdown_enabled ?? true,
       });
     }
+
+    if (error) {
+      toast({ title: "Failed to load reunion info", description: error.message, variant: "destructive" });
+    }
     setLoading(false);
   };
 
@@ -67,27 +89,36 @@ const ReunionTab = () => {
     if (!reunionInfo) return;
     
     setSaving(true);
-    const { error } = await supabase
-      .from("reunion_info")
-      .update({
-        reunion_date: formData.reunion_date ? new Date(formData.reunion_date).toISOString() : null,
-        venue: formData.venue || null,
-        venue_address: formData.venue_address || null,
-        contact_email: formData.contact_email || null,
-        contact_phone: formData.contact_phone || null,
-        description: formData.description || null,
-        countdown_enabled: formData.countdown_enabled,
-        updated_by: user?.id,
-      })
-      .eq("id", reunionInfo.id);
 
-    if (error) {
-      toast({ title: "Save failed", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Reunion info updated successfully" });
-      fetchReunionInfo();
+    try {
+      const reunion_date = datetimeLocalToUtcIso(formData.reunion_date);
+
+      const { error } = await supabase
+        .from("reunion_info")
+        .update({
+          reunion_date,
+          venue: formData.venue || null,
+          venue_address: formData.venue_address || null,
+          contact_email: formData.contact_email || null,
+          contact_phone: formData.contact_phone || null,
+          description: formData.description || null,
+          countdown_enabled: formData.countdown_enabled,
+          updated_by: user?.id,
+        })
+        .eq("id", reunionInfo.id);
+
+      if (error) {
+        toast({ title: "Save failed", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Reunion info updated successfully" });
+        fetchReunionInfo();
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Unknown error";
+      toast({ title: "Save failed", description: message, variant: "destructive" });
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   if (loading) {
