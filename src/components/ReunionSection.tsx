@@ -27,6 +27,28 @@ const ReunionSection = () => {
 
   useEffect(() => {
     fetchReunionInfo();
+
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel("reunion_info_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "reunion_info",
+        },
+        (payload) => {
+          console.log("Reunion info updated:", payload);
+          // Refetch to get the latest data
+          fetchReunionInfo();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchReunionInfo = async () => {
