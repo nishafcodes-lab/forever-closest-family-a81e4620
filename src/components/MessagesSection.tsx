@@ -1,6 +1,6 @@
-import { MessageCircle, Heart, Quote, Send, Loader2 } from "lucide-react";
-import { useEffect, useState, memo, useCallback } from "react";
-import { motion } from "framer-motion";
+import { MessageCircle, Heart, Quote, Send, Loader2, RefreshCw } from "lucide-react";
+import { useEffect, useState, memo, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,8 @@ const MessagesSection = memo(() => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const isFirstLoad = useRef(true);
   const [formData, setFormData] = useState({
     author_name: "",
     author_email: "",
@@ -50,6 +52,38 @@ const MessagesSection = memo(() => {
 
   useEffect(() => {
     fetchMessages();
+
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel("messages_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "messages",
+        },
+        () => {
+          if (!isFirstLoad.current) {
+            setIsUpdating(true);
+            fetchMessages().then(() => {
+              setIsUpdating(false);
+              toast.success("New messages available!");
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    // Mark first load as complete after initial fetch
+    const timer = setTimeout(() => {
+      isFirstLoad.current = false;
+    }, 1000);
+
+    return () => {
+      clearTimeout(timer);
+      supabase.removeChannel(channel);
+    };
   }, [fetchMessages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -79,6 +113,21 @@ const MessagesSection = memo(() => {
 
   return (
     <section id="messages" className="py-16 sm:py-24 bg-muted/30 relative overflow-hidden">
+      {/* Realtime update indicator */}
+      <AnimatePresence>
+        {isUpdating && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg flex items-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4 animate-spin" />
+            <span className="text-sm font-medium">Updating messages...</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Background decoration */}
       <div className="absolute top-0 right-1/4 w-48 sm:w-96 h-48 sm:h-96 bg-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-1/4 w-48 sm:w-96 h-48 sm:h-96 bg-accent/5 rounded-full blur-3xl" />
