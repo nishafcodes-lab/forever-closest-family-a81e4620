@@ -111,9 +111,11 @@ export type Database = {
           created_at: string
           id: string
           message: string
+          rating: number | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: string | null
+          user_id: string | null
         }
         Insert: {
           author_email?: string | null
@@ -121,9 +123,11 @@ export type Database = {
           created_at?: string
           id?: string
           message: string
+          rating?: number | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string | null
+          user_id?: string | null
         }
         Update: {
           author_email?: string | null
@@ -131,9 +135,38 @@ export type Database = {
           created_at?: string
           id?: string
           message?: string
+          rating?: number | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -299,6 +332,54 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      videos: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_seconds: number | null
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          thumbnail_url: string | null
+          title: string
+          uploaded_by: string | null
+          uploader_name: string
+          video_url: string
+          view_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          thumbnail_url?: string | null
+          title: string
+          uploaded_by?: string | null
+          uploader_name: string
+          video_url: string
+          view_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          uploaded_by?: string | null
+          uploader_name?: string
+          video_url?: string
+          view_count?: number | null
         }
         Relationships: []
       }
