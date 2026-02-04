@@ -1,9 +1,10 @@
-import { Camera, Image, X } from "lucide-react";
-import { useEffect, useState, memo, useCallback } from "react";
+import { Camera, Image, RefreshCw } from "lucide-react";
+import { useEffect, useState, memo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { AnimatedSection, StaggerContainer, StaggerItem } from "@/components/ui/animated-section";
 import { SkeletonPhoto } from "@/components/ui/skeleton-card";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,9 @@ const MemoriesSection = memo(() => {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<GalleryPhoto | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const isFirstLoad = useRef(true);
+  const { toast } = useToast();
 
   const fetchPhotos = useCallback(async () => {
     const { data, error } = await supabase
@@ -45,7 +49,42 @@ const MemoriesSection = memo(() => {
 
   useEffect(() => {
     fetchPhotos();
-  }, [fetchPhotos]);
+
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel("gallery_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "gallery",
+        },
+        () => {
+          if (!isFirstLoad.current) {
+            setIsUpdating(true);
+            fetchPhotos().then(() => {
+              setIsUpdating(false);
+              toast({
+                title: "Gallery Updated",
+                description: "New photos have been added to the gallery.",
+              });
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    // Mark first load as complete after initial fetch
+    const timer = setTimeout(() => {
+      isFirstLoad.current = false;
+    }, 1000);
+
+    return () => {
+      clearTimeout(timer);
+      supabase.removeChannel(channel);
+    };
+  }, [fetchPhotos, toast]);
 
   const getPhotoCount = useCallback((categoryName: string) => {
     return photos.filter((p) => p.category === categoryName).length;
@@ -57,6 +96,21 @@ const MemoriesSection = memo(() => {
 
   return (
     <section id="memories" className="py-16 sm:py-24 relative overflow-hidden">
+      {/* Realtime update indicator */}
+      <AnimatePresence>
+        {isUpdating && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg flex items-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4 animate-spin" />
+            <span className="text-sm font-medium">Updating gallery...</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Background decoration */}
       <div className="absolute top-1/3 right-0 w-40 sm:w-80 h-40 sm:h-80 bg-accent/5 rounded-full blur-3xl" />
       <div className="absolute bottom-1/3 left-0 w-40 sm:w-80 h-40 sm:h-80 bg-primary/5 rounded-full blur-3xl" />
