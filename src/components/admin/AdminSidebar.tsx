@@ -1,6 +1,6 @@
 import { 
   Users, GraduationCap, UsersRound, MessageCircle, 
-  Image, Calendar, Mail, LogOut, Home, Settings 
+  Image, Calendar, Mail, LogOut, Home, Video 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,8 +15,9 @@ const menuItems = [
   { id: "teachers", label: "Teachers", icon: GraduationCap },
   { id: "students", label: "Students", icon: Users },
   { id: "groups", label: "Student Groups", icon: UsersRound },
-  { id: "messages", label: "Messages", icon: MessageCircle },
+  { id: "messages", label: "Reviews", icon: MessageCircle },
   { id: "gallery", label: "Gallery", icon: Image },
+  { id: "videos", label: "Videos", icon: Video },
   { id: "reunion", label: "Reunion Info", icon: Calendar },
   { id: "email", label: "Send Email", icon: Mail },
 ];

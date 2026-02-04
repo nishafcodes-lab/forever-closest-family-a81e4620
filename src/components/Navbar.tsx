@@ -1,9 +1,10 @@
 import { useState, useEffect, memo } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, GraduationCap, Shield, Users } from "lucide-react";
+import { Menu, X, GraduationCap, Shield, Users, LogIn, LogOut, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { useAuth } from "@/hooks/useAuth";
 
 const navLinks = [
   { name: "Home", href: "#home" },
@@ -11,13 +12,15 @@ const navLinks = [
   { name: "Teachers", href: "#teachers" },
   { name: "Groups", href: "#groups" },
   { name: "Memories", href: "#memories" },
-  { name: "Messages", href: "#messages" },
+  { name: "Videos", href: "#videos" },
+  { name: "Reviews", href: "#messages" },
   { name: "Reunion", href: "#reunion" },
 ];
 
 const Navbar = memo(() => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user, signOut, isAdmin } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -93,12 +96,34 @@ const Navbar = memo(() => {
                   Directory
                 </Button>
               </Link>
-              <Link to="/admin/login">
-                <Button variant="outline" size="sm" className="gap-2 rounded-full text-xs">
-                  <Shield className="w-3.5 h-3.5" />
-                  Admin
-                </Button>
-              </Link>
+              {user ? (
+                <>
+                  {isAdmin && (
+                    <Link to="/admin">
+                      <Button variant="outline" size="sm" className="gap-2 rounded-full text-xs">
+                        <Shield className="w-3.5 h-3.5" />
+                        Admin
+                      </Button>
+                    </Link>
+                  )}
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="gap-2 rounded-full text-xs"
+                    onClick={() => signOut()}
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <Link to="/auth">
+                  <Button variant="outline" size="sm" className="gap-2 rounded-full text-xs">
+                    <LogIn className="w-3.5 h-3.5" />
+                    Login
+                  </Button>
+                </Link>
+              )}
               <ThemeToggle />
             </motion.div>
           </div>
@@ -110,11 +135,31 @@ const Navbar = memo(() => {
                 <Users className="w-4 h-4" />
               </Button>
             </Link>
-            <Link to="/admin/login">
-              <Button variant="outline" size="sm" className="gap-1 rounded-full text-xs">
-                <Shield className="w-4 h-4" />
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                {isAdmin && (
+                  <Link to="/admin">
+                    <Button variant="outline" size="sm" className="gap-1 rounded-full text-xs">
+                      <Shield className="w-4 h-4" />
+                    </Button>
+                  </Link>
+                )}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="gap-1 rounded-full text-xs"
+                  onClick={() => signOut()}
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </>
+            ) : (
+              <Link to="/auth">
+                <Button variant="outline" size="sm" className="gap-1 rounded-full text-xs">
+                  <LogIn className="w-4 h-4" />
+                </Button>
+              </Link>
+            )}
             <ThemeToggle />
             <motion.button
               onClick={() => setIsOpen(!isOpen)}
@@ -171,19 +216,48 @@ const Navbar = memo(() => {
                 >
                   <Button variant="ghost" size="sm" className="w-full gap-2 rounded-lg text-xs">
                     <Users className="w-4 h-4" />
-                    Student Directory
+                    Directory
                   </Button>
                 </Link>
-                <Link
-                  to="/admin/login"
-                  onClick={() => setIsOpen(false)}
-                  className="flex-1"
-                >
-                  <Button variant="outline" size="sm" className="w-full gap-2 rounded-lg text-xs">
-                    <Shield className="w-4 h-4" />
-                    Admin Panel
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setIsOpen(false)}
+                        className="flex-1"
+                      >
+                        <Button variant="outline" size="sm" className="w-full gap-2 rounded-lg text-xs">
+                          <Shield className="w-4 h-4" />
+                          Admin
+                        </Button>
+                      </Link>
+                    )}
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="flex-1 gap-2 rounded-lg text-xs"
+                      onClick={() => {
+                        signOut();
+                        setIsOpen(false);
+                      }}
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <Link
+                    to="/auth"
+                    onClick={() => setIsOpen(false)}
+                    className="flex-1"
+                  >
+                    <Button variant="outline" size="sm" className="w-full gap-2 rounded-lg text-xs">
+                      <LogIn className="w-4 h-4" />
+                      Login
+                    </Button>
+                  </Link>
+                )}
               </div>
             </motion.div>
           )}

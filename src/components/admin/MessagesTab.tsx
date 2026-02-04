@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Check, X, Trash2, Loader2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StarRating } from "@/components/ui/star-rating";
 import { format } from "date-fns";
 
 interface Message {
@@ -15,6 +16,7 @@ interface Message {
   status: string;
   created_at: string;
   reviewed_at: string | null;
+  rating: number | null;
 }
 
 const MessagesTab = () => {
@@ -80,7 +82,7 @@ const MessagesTab = () => {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="font-display text-2xl font-bold">Messages Management</h2>
+        <h2 className="font-display text-2xl font-bold">Reviews Management</h2>
       </div>
 
       {loading ? (
@@ -116,12 +118,15 @@ const MessagesTab = () => {
                     <div key={msg.id} className="bg-card rounded-xl border border-border p-6">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
+                          <div className="flex items-center gap-3 mb-2 flex-wrap">
                             <h4 className="font-semibold">{msg.author_name}</h4>
+                            {msg.rating && (
+                              <StarRating rating={msg.rating} readonly size="sm" />
+                            )}
                             <span className={`px-2 py-0.5 rounded-full text-xs ${
-                              msg.status === "pending" ? "bg-orange-100 text-orange-800" :
-                              msg.status === "approved" ? "bg-green-100 text-green-800" :
-                              "bg-red-100 text-red-800"
+                              msg.status === "pending" ? "bg-amber-500/10 text-amber-700" :
+                              msg.status === "approved" ? "bg-green-500/10 text-green-700" :
+                              "bg-red-500/10 text-red-700"
                             }`}>
                               {msg.status}
                             </span>

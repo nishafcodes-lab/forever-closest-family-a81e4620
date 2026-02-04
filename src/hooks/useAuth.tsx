@@ -31,16 +31,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsAdmin(!!data);
   };
 
+  const createProfileIfNeeded = async (userId: string, email: string) => {
+    // Check if profile already exists
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    
+    if (!existingProfile) {
+      // Check for pending display name from signup
+      const pendingName = localStorage.getItem("pending_display_name");
+      const displayName = pendingName || email.split("@")[0];
+      
+      await supabase.from("profiles").insert({
+        user_id: userId,
+        display_name: displayName,
+      });
+      
+      localStorage.removeItem("pending_display_name");
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
           // Use setTimeout to avoid potential deadlock
-          setTimeout(() => checkAdminRole(session.user.id), 0);
+          setTimeout(() => {
+            checkAdminRole(session.user.id);
+            createProfileIfNeeded(session.user.id, session.user.email || "");
+          }, 0);
         } else {
           setIsAdmin(false);
         }
@@ -56,6 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (session?.user) {
         checkAdminRole(session.user.id);
+        createProfileIfNeeded(session.user.id, session.user.email || "");
       }
       
       setLoading(false);
