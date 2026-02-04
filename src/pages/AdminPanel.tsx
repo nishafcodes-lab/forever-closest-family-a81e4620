@@ -9,6 +9,7 @@ import StudentsTab from "@/components/admin/StudentsTab";
 import GroupsTab from "@/components/admin/GroupsTab";
 import MessagesTab from "@/components/admin/MessagesTab";
 import GalleryTab from "@/components/admin/GalleryTab";
+import VideosTab from "@/components/admin/VideosTab";
 import ReunionTab from "@/components/admin/ReunionTab";
 import EmailTab from "@/components/admin/EmailTab";
 
@@ -46,6 +47,7 @@ const AdminPanel = () => {
       case "groups": return <GroupsTab />;
       case "messages": return <MessagesTab />;
       case "gallery": return <GalleryTab />;
+      case "videos": return <VideosTab />;
       case "reunion": return <ReunionTab />;
       case "email": return <EmailTab />;
       default: return <DashboardTab />;

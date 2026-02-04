@@ -6,8 +6,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { AnimatedSection, StaggerContainer, StaggerItem } from "@/components/ui/animated-section";
 import { SkeletonCard } from "@/components/ui/skeleton-card";
+import { StarRating } from "@/components/ui/star-rating";
+import { useAuth } from "@/hooks/useAuth";
+import { Link } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +25,7 @@ interface Message {
   author_name: string;
   message: string;
   created_at: string;
+  rating: number | null;
 }
 
 const MessagesSection = memo(() => {
@@ -32,14 +37,16 @@ const MessagesSection = memo(() => {
   const isFirstLoad = useRef(true);
   const [formData, setFormData] = useState({
     author_name: "",
-    author_email: "",
     message: "",
+    rating: 5,
   });
+  
+  const { user } = useAuth();
 
   const fetchMessages = useCallback(async () => {
     const { data, error } = await supabase
       .from("messages")
-      .select("id, author_name, message, created_at")
+      .select("id, author_name, message, created_at, rating")
       .eq("status", "approved")
       .order("created_at", { ascending: false })
       .limit(6);
@@ -88,24 +95,39 @@ const MessagesSection = memo(() => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast.error("Please login to submit a review");
+      return;
+    }
+    
     if (!formData.author_name.trim() || !formData.message.trim()) {
       toast.error("Please fill in your name and message");
       return;
     }
 
     setSubmitting(true);
+    
+    // Get profile display name if available
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    
     const { error } = await supabase.from("messages").insert({
-      author_name: formData.author_name.trim(),
-      author_email: formData.author_email.trim() || null,
+      author_name: profile?.display_name || formData.author_name.trim(),
       message: formData.message.trim(),
+      rating: formData.rating,
       status: "pending",
+      user_id: user.id,
     });
 
     if (error) {
-      toast.error("Failed to submit message. Please try again.");
+      toast.error("Failed to submit review. Please try again.");
     } else {
-      toast.success("Message submitted! It will appear after approval.");
-      setFormData({ author_name: "", author_email: "", message: "" });
+      toast.success("Review submitted! It will appear after approval.");
+      setFormData({ author_name: "", message: "", rating: 5 });
       setDialogOpen(false);
     }
     setSubmitting(false);
@@ -174,9 +196,14 @@ const MessagesSection = memo(() => {
                   >
                     <Quote className="absolute top-3 right-3 sm:top-4 sm:right-4 w-6 h-6 sm:w-8 sm:h-8 text-primary/20" />
                   </motion.div>
-                  <h4 className="font-display text-base sm:text-lg font-semibold text-primary mb-3 sm:mb-4">
-                    {msg.author_name}
-                  </h4>
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <h4 className="font-display text-base sm:text-lg font-semibold text-primary">
+                      {msg.author_name}
+                    </h4>
+                    {msg.rating && (
+                      <StarRating rating={msg.rating} readonly size="sm" />
+                    )}
+                  </div>
                   <p className="text-sm sm:text-base text-muted-foreground leading-relaxed italic line-clamp-4">
                     "{msg.message}"
                   </p>
@@ -199,91 +226,96 @@ const MessagesSection = memo(() => {
               <Heart className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 text-accent" />
             </motion.div>
             <h3 className="font-display text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">
-              Share Your Message
+              Share Your Review
             </h3>
             <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 px-2">
-              Have something special to say to your classmates or teachers? We'd love to hear from you!
+              Rate your experience and share your thoughts about the reunion!
             </p>
             
+            {user ? (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
                   <Button className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base">
                     <MessageCircle className="w-4 h-4" />
-                    Send a Message
+                    Write a Review
                   </Button>
                 </motion.div>
               </DialogTrigger>
               <DialogContent className="w-[95vw] max-w-md sm:max-w-md mx-auto">
                 <DialogHeader>
-                  <DialogTitle className="font-display text-lg sm:text-xl">Share Your Message</DialogTitle>
+                  <DialogTitle className="font-display text-lg sm:text-xl">Write Your Review</DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                  >
+                <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                  <div>
+                    <Label htmlFor="review-name">Your Name *</Label>
                     <Input
-                      placeholder="Your Name *"
+                      id="review-name"
+                      placeholder="Enter your name"
                       value={formData.author_name}
                       onChange={(e) => setFormData({ ...formData, author_name: e.target.value })}
                       required
-                      className="rounded-xl text-sm sm:text-base"
+                      maxLength={100}
+                      className="mt-1"
                     />
-                  </motion.div>
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    <Input
-                      type="email"
-                      placeholder="Your Email (optional)"
-                      value={formData.author_email}
-                      onChange={(e) => setFormData({ ...formData, author_email: e.target.value })}
-                      className="rounded-xl text-sm sm:text-base"
-                    />
-                  </motion.div>
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                  >
+                  </div>
+                  
+                  <div>
+                    <Label>Your Rating *</Label>
+                    <div className="mt-2 flex items-center gap-3">
+                      <StarRating 
+                        rating={formData.rating} 
+                        onChange={(rating) => setFormData({ ...formData, rating })}
+                        size="lg"
+                      />
+                      <span className="text-sm text-muted-foreground">
+                        {formData.rating} / 5
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="review-message">Your Review *</Label>
                     <Textarea
-                      placeholder="Your message... *"
+                      id="review-message"
+                      placeholder="Share your experience..."
                       rows={4}
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       required
-                      className="rounded-xl text-sm sm:text-base"
+                      maxLength={1000}
+                      className="mt-1"
                     />
-                  </motion.div>
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                  >
-                    <Button type="submit" className="w-full rounded-xl text-sm sm:text-base" disabled={submitting}>
-                      {submitting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Submitting...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-4 h-4 mr-2" />
-                          Submit Message
-                        </>
-                      )}
-                    </Button>
-                  </motion.div>
+                  </div>
+                  
+                  <Button type="submit" className="w-full" disabled={submitting}>
+                    {submitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 mr-2" />
+                        Submit Review
+                      </>
+                    )}
+                  </Button>
                   <p className="text-xs text-muted-foreground text-center">
-                    Messages will be reviewed before appearing on the site.
+                    Reviews will be reviewed before appearing on the site.
                   </p>
                 </form>
               </DialogContent>
             </Dialog>
+            ) : (
+              <Link to="/auth">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                  <Button className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full">
+                    Login to Review
+                  </Button>
+                </motion.div>
+              </Link>
+            )}
           </motion.div>
         </AnimatedSection>
       </div>
