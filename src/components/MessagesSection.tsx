@@ -48,8 +48,7 @@ const MessagesSection = memo(() => {
       .from("messages")
       .select("id, author_name, message, created_at, rating")
       .eq("status", "approved")
-      .order("created_at", { ascending: false })
-      .limit(6);
+      .order("created_at", { ascending: false });
 
     if (data && !error) {
       setMessages(data);
@@ -182,7 +181,7 @@ const MessagesSection = memo(() => {
             <p className="text-sm sm:text-base">No messages yet. Be the first to share your thoughts!</p>
           </AnimatedSection>
         ) : (
-          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8 mb-8 sm:mb-12">
+          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12 max-h-[800px] overflow-y-auto pr-2">
             {messages.map((msg) => (
               <StaggerItem key={msg.id}>
                 <motion.div
