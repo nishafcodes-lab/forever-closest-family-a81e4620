@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { AnimatedSection, StaggerContainer, StaggerItem } from "@/components/ui/animated-section";
 import { FloatingParticles } from "@/components/ui/floating-particles";
 import { useToast } from "@/hooks/use-toast";
+import { CelebrationOverlay } from "@/components/ui/celebration-overlay";
 
 interface ReunionInfo {
   reunion_date: string | null;
@@ -30,6 +31,8 @@ const ReunionSection = memo(() => {
     minutes: 0,
     seconds: 0,
   });
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationShown, setCelebrationShown] = useState(false);
 
   const fetchReunionInfo = useCallback(async () => {
     try {
@@ -125,11 +128,21 @@ const ReunionSection = memo(() => {
           minutes: Math.floor((difference / 1000 / 60) % 60),
           seconds: Math.floor((difference / 1000) % 60),
         });
+      } else if (!celebrationShown) {
+        // Countdown complete - show celebration!
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        setShowCelebration(true);
+        setCelebrationShown(true);
+        clearInterval(timer);
       }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [reunionInfo]);
+  }, [reunionInfo, celebrationShown]);
+
+  const handleCelebrationComplete = useCallback(() => {
+    setShowCelebration(false);
+  }, []);
 
   const countdownItems = [
     { value: timeLeft.days, label: "Days" },
@@ -148,6 +161,13 @@ const ReunionSection = memo(() => {
 
   return (
     <section id="reunion" className="py-16 sm:py-24 relative overflow-hidden">
+      {/* Celebration Overlay */}
+      <CelebrationOverlay
+        show={showCelebration}
+        duration={30}
+        onComplete={handleCelebrationComplete}
+      />
+
       {/* Background decoration */}
       <div className="absolute inset-0 gradient-bg" />
       <div className="hidden sm:block">
