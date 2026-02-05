@@ -213,7 +213,7 @@ const MemoriesSection = memo(() => {
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.3) }}
                   onClick={() => setSelectedPhoto(photo)}
-                  className="group relative aspect-square rounded-lg sm:rounded-xl overflow-hidden cursor-pointer card-shadow"
+                  className="group relative aspect-[4/3] sm:aspect-square rounded-lg sm:rounded-xl overflow-hidden cursor-pointer card-shadow"
                   whileHover={{ y: -4, boxShadow: "var(--shadow-hover)" }}
                 >
                   <img
