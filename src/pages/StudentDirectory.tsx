@@ -79,9 +79,9 @@ const StudentDirectory = () => {
 
   const getRoleBadgeColor = (role: string | null) => {
     switch (role) {
-      case "CR":
+      case "CRS":
         return "bg-blue-500 hover:bg-blue-600 text-white";
-      case "GR":
+      case "GRS":
         return "bg-green-500 hover:bg-green-600 text-white";
       default:
         return "bg-primary hover:bg-primary/90 text-primary-foreground";
@@ -90,9 +90,9 @@ const StudentDirectory = () => {
 
   const getRoleFullName = (role: string | null) => {
     switch (role) {
-      case "CR":
+      case "CRS":
         return "Class Representative";
-      case "GR":
+      case "GRS":
         return "Group Representative";
       default:
         return role;

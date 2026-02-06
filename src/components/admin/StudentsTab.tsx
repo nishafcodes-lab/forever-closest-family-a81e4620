@@ -193,8 +193,8 @@ const StudentsTab = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Student">Student</SelectItem>
-                    <SelectItem value="CR">CR (Class Representative)</SelectItem>
-                    <SelectItem value="GR">GR (Group Representative)</SelectItem>
+                    <SelectItem value="CRS">CRS (Class Representative)</SelectItem>
+                    <SelectItem value="GRS">GRS (Group Representative)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -299,8 +299,8 @@ const StudentsTab = () => {
                   <TableCell>{student.batch}</TableCell>
                   <TableCell>
                     <span className={`px-2 py-1 rounded-full text-xs ${
-                      student.role === "CR" ? "bg-blue-100 text-blue-800" :
-                      student.role === "GR" ? "bg-green-100 text-green-800" :
+                      student.role === "CRS" ? "bg-blue-100 text-blue-800" :
+                      student.role === "GRS" ? "bg-green-100 text-green-800" :
                       "bg-gray-100 text-gray-800"
                     }`}>
                       {student.role}
