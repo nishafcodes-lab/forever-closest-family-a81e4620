@@ -119,12 +119,12 @@ const GroupsSection = memo(() => {
                     transition={{ duration: 0.3 }}
                   >
                     {/* Photo or Placeholder */}
-                    <div className={`h-36 sm:h-48 relative overflow-hidden ${!group.photo_url ? `bg-gradient-to-br ${getColor(index)}` : ''}`}>
+                    <div className={`aspect-[4/3] relative overflow-hidden ${!group.photo_url ? `bg-gradient-to-br ${getColor(index)}` : ''}`}>
                       {group.photo_url ? (
                         <img
                           src={group.photo_url}
                           alt={group.name}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          className="w-full h-full object-contain bg-muted/30 transition-transform duration-500 group-hover:scale-105"
                           loading="lazy"
                         />
                       ) : (

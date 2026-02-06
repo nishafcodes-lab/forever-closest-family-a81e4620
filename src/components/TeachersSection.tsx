@@ -82,19 +82,19 @@ const TeachersSection = memo(() => {
                 >
                   {teacher.photo_url ? (
                     <motion.div 
-                      className="w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 rounded-full overflow-hidden ring-2 sm:ring-4 ring-primary/10"
+                      className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-3 sm:mb-4 rounded-full overflow-hidden ring-2 sm:ring-4 ring-primary/10 bg-muted/30"
                       whileHover={{ scale: 1.1, rotate: 5 }}
                     >
                       <img
                         src={teacher.photo_url}
                         alt={teacher.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                         loading="lazy"
                       />
                     </motion.div>
                   ) : (
                     <motion.div 
-                      className="w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-2xl sm:text-4xl ring-2 sm:ring-4 ring-primary/10"
+                      className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-3 sm:mb-4 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-2xl sm:text-4xl ring-2 sm:ring-4 ring-primary/10"
                       whileHover={{ scale: 1.1, rotate: 5 }}
                     >
                       {getEmoji(index)}

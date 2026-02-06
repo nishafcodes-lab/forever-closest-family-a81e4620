@@ -232,8 +232,12 @@ const VideosSection = memo(() => {
             ))}
           </div>
         ) : videos.length === 0 ? (
-          <AnimatedSection className="text-center text-muted-foreground mb-8">
-            <p className="text-sm sm:text-base">No videos yet. Be the first to share!</p>
+          <AnimatedSection className="text-center py-8 mb-8">
+            <div className="glass-card rounded-xl sm:rounded-2xl p-8 max-w-md mx-auto">
+              <Video className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+              <p className="text-muted-foreground text-sm sm:text-base">No videos uploaded yet.</p>
+              <p className="text-muted-foreground/70 text-xs mt-2">Be the first to share a memory!</p>
+            </div>
           </AnimatedSection>
         ) : (
           <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12">
@@ -249,20 +253,23 @@ const VideosSection = memo(() => {
                       <img
                         src={video.thumbnail_url}
                         alt={video.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain bg-black/5"
                         loading="lazy"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
-                        <Video className="w-12 h-12 text-muted-foreground/50" />
-                      </div>
+                      <video
+                        src={video.video_url}
+                        className="w-full h-full object-contain bg-black"
+                        preload="metadata"
+                        muted
+                      />
                     )}
-                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <motion.div
-                        className="w-12 h-12 rounded-full bg-primary flex items-center justify-center"
+                        className="w-14 h-14 rounded-full bg-primary/90 flex items-center justify-center shadow-lg"
                         whileHover={{ scale: 1.1 }}
                       >
-                        <Play className="w-6 h-6 text-primary-foreground ml-1" />
+                        <Play className="w-7 h-7 text-primary-foreground ml-1" />
                       </motion.div>
                     </div>
                   </div>
