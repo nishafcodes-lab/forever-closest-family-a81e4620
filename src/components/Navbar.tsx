@@ -1,6 +1,6 @@
 import { useState, useEffect, memo } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, GraduationCap, Shield, Users, LogIn, LogOut, User } from "lucide-react";
+import { Menu, X, GraduationCap, Shield, Users, LogIn, LogOut, User, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -96,6 +96,14 @@ const Navbar = memo(() => {
                   Directory
                 </Button>
               </Link>
+              {user && (
+                <Link to="/chat">
+                  <Button variant="ghost" size="sm" className="gap-2 rounded-full text-xs">
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    Chat
+                  </Button>
+                </Link>
+              )}
               {user ? (
                 <>
                   {isAdmin && (
@@ -137,6 +145,11 @@ const Navbar = memo(() => {
             </Link>
             {user ? (
               <>
+                <Link to="/chat">
+                  <Button variant="ghost" size="sm" className="gap-1 rounded-full text-xs">
+                    <MessageCircle className="w-4 h-4" />
+                  </Button>
+                </Link>
                 {isAdmin && (
                   <Link to="/admin">
                     <Button variant="outline" size="sm" className="gap-1 rounded-full text-xs">
@@ -221,6 +234,16 @@ const Navbar = memo(() => {
                 </Link>
                 {user ? (
                   <>
+                    <Link
+                      to="/chat"
+                      onClick={() => setIsOpen(false)}
+                      className="flex-1"
+                    >
+                      <Button variant="ghost" size="sm" className="w-full gap-2 rounded-lg text-xs">
+                        <MessageCircle className="w-4 h-4" />
+                        Chat
+                      </Button>
+                    </Link>
                     {isAdmin && (
                       <Link
                         to="/admin"

@@ -12,6 +12,7 @@ import GalleryTab from "@/components/admin/GalleryTab";
 import VideosTab from "@/components/admin/VideosTab";
 import ReunionTab from "@/components/admin/ReunionTab";
 import EmailTab from "@/components/admin/EmailTab";
+import ChatManagementTab from "@/components/admin/ChatManagementTab";
 
 const AdminPanel = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
@@ -48,6 +49,7 @@ const AdminPanel = () => {
       case "messages": return <MessagesTab />;
       case "gallery": return <GalleryTab />;
       case "videos": return <VideosTab />;
+      case "chat": return <ChatManagementTab />;
       case "reunion": return <ReunionTab />;
       case "email": return <EmailTab />;
       default: return <DashboardTab />;
