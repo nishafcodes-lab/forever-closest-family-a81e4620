@@ -1,10 +1,11 @@
 import { useState, useEffect, memo } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, GraduationCap, Shield, Users, LogIn, LogOut, User, MessageCircle } from "lucide-react";
+import { Menu, X, GraduationCap, Shield, Users, LogIn, LogOut, MessageCircle, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useAuth } from "@/hooks/useAuth";
+import { Badge } from "@/components/ui/badge";
 
 const navLinks = [
   { name: "Home", href: "#home" },
@@ -17,10 +18,18 @@ const navLinks = [
   { name: "Reunion", href: "#reunion" },
 ];
 
+const getRoleBadge = (role: string) => {
+  switch (role) {
+    case "admin": return { label: "Admin", className: "bg-destructive/10 text-destructive border-destructive/20" };
+    case "teacher": return { label: "Teacher", className: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20" };
+    default: return null;
+  }
+};
+
 const Navbar = memo(() => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { user, signOut, isAdmin } = useAuth();
+  const { user, signOut, isAdmin, isTeacher, userRole } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,7 +39,6 @@ const Navbar = memo(() => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close menu when clicking outside on mobile
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -41,6 +49,30 @@ const Navbar = memo(() => {
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
+
+  const roleBadge = user ? getRoleBadge(userRole) : null;
+
+  const getDashboardLink = () => {
+    if (isAdmin) return "/admin";
+    if (isTeacher) return "/teacher";
+    return null;
+  };
+
+  const getDashboardLabel = () => {
+    if (isAdmin) return "Admin";
+    if (isTeacher) return "Teacher";
+    return null;
+  };
+
+  const getDashboardIcon = () => {
+    if (isAdmin) return Shield;
+    if (isTeacher) return BookOpen;
+    return Shield;
+  };
+
+  const dashboardLink = getDashboardLink();
+  const dashboardLabel = getDashboardLabel();
+  const DashboardIcon = getDashboardIcon();
 
   return (
     <motion.nav 
@@ -106,13 +138,18 @@ const Navbar = memo(() => {
               )}
               {user ? (
                 <>
-                  {isAdmin && (
-                    <Link to="/admin">
+                  {dashboardLink && (
+                    <Link to={dashboardLink}>
                       <Button variant="outline" size="sm" className="gap-2 rounded-full text-xs">
-                        <Shield className="w-3.5 h-3.5" />
-                        Admin
+                        <DashboardIcon className="w-3.5 h-3.5" />
+                        {dashboardLabel}
                       </Button>
                     </Link>
+                  )}
+                  {roleBadge && (
+                    <Badge variant="outline" className={`text-[10px] ${roleBadge.className}`}>
+                      {roleBadge.label}
+                    </Badge>
                   )}
                   <Button 
                     variant="ghost" 
@@ -150,10 +187,10 @@ const Navbar = memo(() => {
                     <MessageCircle className="w-4 h-4" />
                   </Button>
                 </Link>
-                {isAdmin && (
-                  <Link to="/admin">
+                {dashboardLink && (
+                  <Link to={dashboardLink}>
                     <Button variant="outline" size="sm" className="gap-1 rounded-full text-xs">
-                      <Shield className="w-4 h-4" />
+                      <DashboardIcon className="w-4 h-4" />
                     </Button>
                   </Link>
                 )}
@@ -221,7 +258,7 @@ const Navbar = memo(() => {
                   </motion.a>
                 ))}
               </div>
-              <div className="flex gap-2 pt-2 border-t border-border md:hidden">
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-border md:hidden">
                 <Link
                   to="/students"
                   onClick={() => setIsOpen(false)}
@@ -244,15 +281,15 @@ const Navbar = memo(() => {
                         Chat
                       </Button>
                     </Link>
-                    {isAdmin && (
+                    {dashboardLink && (
                       <Link
-                        to="/admin"
+                        to={dashboardLink}
                         onClick={() => setIsOpen(false)}
                         className="flex-1"
                       >
                         <Button variant="outline" size="sm" className="w-full gap-2 rounded-lg text-xs">
-                          <Shield className="w-4 h-4" />
-                          Admin
+                          <DashboardIcon className="w-4 h-4" />
+                          {dashboardLabel}
                         </Button>
                       </Link>
                     )}
@@ -282,6 +319,14 @@ const Navbar = memo(() => {
                   </Link>
                 )}
               </div>
+              {/* Role indicator in mobile menu */}
+              {user && roleBadge && (
+                <div className="mt-2 pt-2 border-t border-border md:hidden flex justify-center">
+                  <Badge variant="outline" className={`text-[10px] ${roleBadge.className}`}>
+                    Logged in as {roleBadge.label}
+                  </Badge>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
