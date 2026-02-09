@@ -22,15 +22,22 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
   
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, userRole } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
-      navigate("/");
+      // Redirect based on role after login
+      if (userRole === "admin") {
+        navigate("/admin");
+      } else if (userRole === "teacher") {
+        navigate("/teacher");
+      } else {
+        navigate("/");
+      }
     }
-  }, [user, navigate]);
+  }, [user, userRole, navigate]);
 
   const validateForm = () => {
     const newErrors: typeof errors = {};

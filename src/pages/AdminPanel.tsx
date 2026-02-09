@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
@@ -19,12 +19,6 @@ const AdminPanel = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  useEffect(() => {
-    if (!loading && (!user || !isAdmin)) {
-      navigate("/admin-login");
-    }
-  }, [user, isAdmin, loading, navigate]);
-
   const handleLogout = async () => {
     await signOut();
     navigate("/");
@@ -38,7 +32,7 @@ const AdminPanel = () => {
     );
   }
 
-  if (!user || !isAdmin) return null;
+  if (!user) return null;
 
   const renderTab = () => {
     switch (activeTab) {

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useConversations } from "@/hooks/useConversations";
 import { usePresence } from "@/hooks/usePresence";
@@ -11,7 +10,6 @@ import ChatWindow from "@/components/chat/ChatWindow";
 
 const Chat = () => {
   const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [showChat, setShowChat] = useState(!isMobile);
@@ -52,11 +50,7 @@ const Chat = () => {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth");
-    }
-  }, [user, authLoading, navigate]);
+  // Auth is handled by ProtectedRoute
 
   const activeConversation = conversations.find(c => c.id === activeConversationId) || null;
 
