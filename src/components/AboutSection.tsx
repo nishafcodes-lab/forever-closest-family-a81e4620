@@ -4,8 +4,8 @@ import { memo } from "react";
 import { AnimatedSection, StaggerContainer, StaggerItem } from "@/components/ui/animated-section";
 
 const leaders = [
-  { role: "First GRs", names: ["Iqra Aslam", "Tahira Mustaq", "Fizz Asghar"], icon: Star },
-  { role: "First CRs", names: ["Saqib", "Hamza"], icon: Trophy },
+  { role: "GRs", names: ["Iqra Aslam", "Tahira Mustaq", "Fizza Asghar"], icon: Star },
+  { role: "CRs", names: ["Saqib", "Hamza"], icon: Trophy },
 ];
 
 const AboutSection = memo(() => {

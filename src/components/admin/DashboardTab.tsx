@@ -78,7 +78,7 @@ const DashboardTab = () => {
           <p>🏫 <strong>College:</strong> Government Graduate College Khanpur (KFUEIT)</p>
           <p>📅 <strong>Session:</strong> 2021–2025</p>
           <div className="mt-4 pt-4 border-t border-border">
-            <p className="font-medium text-foreground mb-2">First GRs:</p>
+            <p className="font-medium text-foreground mb-2">GRs:</p>
             <ul className="list-disc list-inside ml-2">
               <li>Iqra Aslam</li>
               <li>Tahira Mustaq</li>
@@ -86,7 +86,7 @@ const DashboardTab = () => {
             </ul>
           </div>
           <div className="mt-4">
-            <p className="font-medium text-foreground mb-2">First CRs:</p>
+            <p className="font-medium text-foreground mb-2">CRs:</p>
             <ul className="list-disc list-inside ml-2">
               <li>Saqib</li>
               <li>Hamza</li>
