@@ -350,6 +350,7 @@ export type Database = {
           name: string
           photo_url: string | null
           role: string | null
+          roll_number: string | null
           updated_at: string
         }
         Insert: {
@@ -362,6 +363,7 @@ export type Database = {
           name: string
           photo_url?: string | null
           role?: string | null
+          roll_number?: string | null
           updated_at?: string
         }
         Update: {
@@ -374,6 +376,7 @@ export type Database = {
           name?: string
           photo_url?: string | null
           role?: string | null
+          roll_number?: string | null
           updated_at?: string
         }
         Relationships: []

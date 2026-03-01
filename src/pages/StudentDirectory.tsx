@@ -18,6 +18,7 @@ interface Student {
   photo_url: string | null;
   bio: string | null;
   email: string | null;
+  roll_number: string | null;
   created_at?: string;
 }
 
@@ -37,7 +38,7 @@ const StudentDirectory = () => {
     const { data, error } = await supabase
       .from("students")
       .select("*")
-      .order("name");
+      .order("roll_number", { ascending: true, nullsFirst: false });
 
     if (data) setStudents(data);
     setLoading(false);
@@ -60,7 +61,8 @@ const StudentDirectory = () => {
       const matchesSearch =
         student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         student.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.bio?.toLowerCase().includes(searchTerm.toLowerCase());
+        student.bio?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.roll_number?.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesBatch = selectedBatch === "all" || student.batch === selectedBatch;
       const matchesRole = selectedRole === "all" || student.role === selectedRole;
@@ -136,7 +138,7 @@ const StudentDirectory = () => {
               <div className="flex-1 relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
-                  placeholder="Search by name, email, or bio..."
+                  placeholder="Search by name, email, roll number, or bio..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-12 h-12 text-base"
@@ -287,6 +289,11 @@ const StudentDirectory = () => {
                     <h3 className="font-semibold text-lg text-foreground mb-1 group-hover:text-primary transition-colors">
                       {student.name}
                     </h3>
+                    {student.roll_number && (
+                      <p className="text-xs font-mono text-muted-foreground mb-1">
+                        Roll # {student.roll_number}
+                      </p>
+                    )}
                     <p className="text-sm text-muted-foreground mb-3 flex items-center justify-center gap-1">
                       <GraduationCap className="w-4 h-4" />
                       {student.batch}
@@ -352,12 +359,15 @@ const StudentDirectory = () => {
                   </div>
 
                   {/* Name and Role */}
-                  <h2 className="text-2xl font-bold text-foreground mb-2">{selectedStudent.name}</h2>
-                  {selectedStudent.role && (
-                    <Badge className={`mb-4 ${getRoleBadgeColor(selectedStudent.role)}`}>
-                      {getRoleFullName(selectedStudent.role)}
-                    </Badge>
-                  )}
+                   <h2 className="text-2xl font-bold text-foreground mb-1">{selectedStudent.name}</h2>
+                   {selectedStudent.roll_number && (
+                     <p className="text-sm font-mono text-muted-foreground mb-2">Roll # {selectedStudent.roll_number}</p>
+                   )}
+                   {selectedStudent.role && (
+                     <Badge className={`mb-4 ${getRoleBadgeColor(selectedStudent.role)}`}>
+                       {getRoleFullName(selectedStudent.role)}
+                     </Badge>
+                   )}
 
                   {/* Info Cards */}
                   <div className="w-full space-y-3 mt-4">
