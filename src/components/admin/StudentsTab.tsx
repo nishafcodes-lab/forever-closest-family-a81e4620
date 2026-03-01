@@ -18,6 +18,7 @@ interface Student {
   photo_url: string | null;
   bio: string | null;
   email: string | null;
+  roll_number: string | null;
 }
 
 const StudentsTab = () => {
@@ -32,6 +33,7 @@ const StudentsTab = () => {
   
   const [formData, setFormData] = useState({
     name: "",
+    roll_number: "",
     batch: "2021-2025",
     role: "Student" as string,
     bio: "",
@@ -47,14 +49,14 @@ const StudentsTab = () => {
     const { data, error } = await supabase
       .from("students")
       .select("*")
-      .order("name");
+      .order("roll_number", { ascending: true, nullsFirst: false });
     
     if (data) setStudents(data);
     setLoading(false);
   };
 
   const resetForm = () => {
-    setFormData({ name: "", batch: "2021-2025", role: "Student", bio: "", email: "", photo_url: "" });
+    setFormData({ name: "", roll_number: "", batch: "2021-2025", role: "Student", bio: "", email: "", photo_url: "" });
     setEditingStudent(null);
   };
 
@@ -62,6 +64,7 @@ const StudentsTab = () => {
     setEditingStudent(student);
     setFormData({
       name: student.name,
+      roll_number: student.roll_number || "",
       batch: student.batch,
       role: student.role || "Student",
       bio: student.bio || "",
@@ -96,12 +99,17 @@ const StudentsTab = () => {
       toast({ title: "Name is required", variant: "destructive" });
       return;
     }
+    if (!formData.roll_number.trim()) {
+      toast({ title: "Roll Number is required", variant: "destructive" });
+      return;
+    }
 
     if (editingStudent) {
       const { error } = await supabase
         .from("students")
         .update({
           name: formData.name,
+          roll_number: formData.roll_number,
           batch: formData.batch,
           role: formData.role,
           bio: formData.bio || null,
@@ -111,7 +119,8 @@ const StudentsTab = () => {
         .eq("id", editingStudent.id);
 
       if (error) {
-        toast({ title: "Update failed", description: error.message, variant: "destructive" });
+        const msg = error.message.includes("students_roll_number_unique") ? "This Roll Number already exists" : error.message;
+        toast({ title: "Update failed", description: msg, variant: "destructive" });
       } else {
         toast({ title: "Student updated successfully" });
         fetchStudents();
@@ -119,6 +128,7 @@ const StudentsTab = () => {
     } else {
       const { error } = await supabase.from("students").insert({
         name: formData.name,
+        roll_number: formData.roll_number,
         batch: formData.batch,
         role: formData.role,
         bio: formData.bio || null,
@@ -128,7 +138,8 @@ const StudentsTab = () => {
       });
 
       if (error) {
-        toast({ title: "Add failed", description: error.message, variant: "destructive" });
+        const msg = error.message.includes("students_roll_number_unique") ? "This Roll Number already exists" : error.message;
+        toast({ title: "Add failed", description: msg, variant: "destructive" });
       } else {
         toast({ title: "Student added successfully" });
         fetchStudents();
@@ -153,7 +164,8 @@ const StudentsTab = () => {
 
   const filteredStudents = students.filter(s => 
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    s.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.roll_number?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -175,6 +187,14 @@ const StudentsTab = () => {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Student name"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Roll Number *</label>
+                <Input
+                  value={formData.roll_number}
+                  onChange={(e) => setFormData({ ...formData, roll_number: e.target.value })}
+                  placeholder="e.g. 2021-BSIT-001"
                 />
               </div>
               <div>
@@ -254,7 +274,7 @@ const StudentsTab = () => {
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search students..."
+            placeholder="Search by name, email, or roll number..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9"
@@ -276,6 +296,7 @@ const StudentsTab = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Photo</TableHead>
+                <TableHead>Roll No.</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Batch</TableHead>
                 <TableHead>Role</TableHead>
@@ -295,6 +316,7 @@ const StudentsTab = () => {
                       </div>
                     )}
                   </TableCell>
+                  <TableCell className="font-mono text-sm">{student.roll_number || "-"}</TableCell>
                   <TableCell className="font-medium">{student.name}</TableCell>
                   <TableCell>{student.batch}</TableCell>
                   <TableCell>
