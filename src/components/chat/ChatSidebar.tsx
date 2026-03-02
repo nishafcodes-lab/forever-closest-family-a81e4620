@@ -17,6 +17,7 @@ interface ChatSidebarProps {
   onSelectConversation: (id: string) => void;
   onNewConversation: (userId: string) => void;
   onNewGroup: (name: string, userIds: string[]) => void;
+  onOpenAIChat?: () => void;
 }
 
 const ChatSidebar = ({
@@ -25,6 +26,7 @@ const ChatSidebar = ({
   onSelectConversation,
   onNewConversation,
   onNewGroup,
+  onOpenAIChat,
 }: ChatSidebarProps) => {
   const { user } = useAuth();
   const [search, setSearch] = useState("");
