@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, Users, MessageCircle } from "lucide-react";
+import { Search, Plus, Users, MessageCircle, Bot, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,6 +17,7 @@ interface ChatSidebarProps {
   onSelectConversation: (id: string) => void;
   onNewConversation: (userId: string) => void;
   onNewGroup: (name: string, userIds: string[]) => void;
+  onOpenAIChat?: () => void;
 }
 
 const ChatSidebar = ({
@@ -25,6 +26,7 @@ const ChatSidebar = ({
   onSelectConversation,
   onNewConversation,
   onNewGroup,
+  onOpenAIChat,
 }: ChatSidebarProps) => {
   const { user } = useAuth();
   const [search, setSearch] = useState("");
@@ -124,6 +126,31 @@ const ChatSidebar = ({
           />
         </div>
       </div>
+
+      {/* AI Assistant Button */}
+      {onOpenAIChat && (
+        <button
+          onClick={onOpenAIChat}
+          className={`w-full flex items-center gap-3 p-3 sm:p-4 hover:bg-muted/50 transition-colors border-b border-border text-left ${
+            activeConversation === "ai-assistant" ? "bg-primary/5 border-l-2 border-l-primary" : ""
+          }`}
+        >
+          <div className="relative flex-shrink-0">
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="font-medium text-sm">AI Assistant</span>
+              <Sparkles className="w-3 h-3 text-primary" />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Get help, suggestions & more
+            </p>
+          </div>
+        </button>
+      )}
 
       {/* Conversation List */}
       <ScrollArea className="flex-1">
