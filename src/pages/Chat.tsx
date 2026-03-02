@@ -7,11 +7,13 @@ import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import ChatSidebar from "@/components/chat/ChatSidebar";
 import ChatWindow from "@/components/chat/ChatWindow";
+import AIChatWindow from "@/components/chat/AIChatWindow";
 
 const Chat = () => {
   const { user, loading: authLoading } = useAuth();
   const isMobile = useIsMobile();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [showAIChat, setShowAIChat] = useState(false);
   const [showChat, setShowChat] = useState(!isMobile);
   const [presenceMap, setPresenceMap] = useState<Map<string, boolean>>(new Map());
 
@@ -22,10 +24,8 @@ const Chat = () => {
     createGroupConversation,
   } = useConversations();
 
-  // Initialize presence tracking
   usePresence();
 
-  // Fetch presence
   useEffect(() => {
     const fetchPresence = async () => {
       const { data } = await supabase
@@ -50,12 +50,17 @@ const Chat = () => {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  // Auth is handled by ProtectedRoute
-
   const activeConversation = conversations.find(c => c.id === activeConversationId) || null;
 
   const handleSelectConversation = (id: string) => {
     setActiveConversationId(id);
+    setShowAIChat(false);
+    if (isMobile) setShowChat(true);
+  };
+
+  const handleOpenAIChat = () => {
+    setShowAIChat(true);
+    setActiveConversationId(null);
     if (isMobile) setShowChat(true);
   };
 
@@ -63,6 +68,7 @@ const Chat = () => {
     const convId = await createDirectConversation(userId);
     if (convId) {
       setActiveConversationId(convId);
+      setShowAIChat(false);
       if (isMobile) setShowChat(true);
     }
   };
@@ -71,6 +77,7 @@ const Chat = () => {
     const convId = await createGroupConversation(name, userIds);
     if (convId) {
       setActiveConversationId(convId);
+      setShowAIChat(false);
       if (isMobile) setShowChat(true);
     }
   };
@@ -109,10 +116,11 @@ const Chat = () => {
       >
         <ChatSidebar
           conversations={conversations}
-          activeConversation={activeConversationId}
+          activeConversation={showAIChat ? "ai-assistant" : activeConversationId}
           onSelectConversation={handleSelectConversation}
           onNewConversation={handleNewConversation}
           onNewGroup={handleNewGroup}
+          onOpenAIChat={handleOpenAIChat}
         />
       </div>
 
@@ -126,11 +134,15 @@ const Chat = () => {
             : "flex-1"
         }`}
       >
-        <ChatWindow
-          conversation={activeConversation}
-          onBack={handleBack}
-          isOnline={isOtherOnline(activeConversation)}
-        />
+        {showAIChat ? (
+          <AIChatWindow onBack={handleBack} />
+        ) : (
+          <ChatWindow
+            conversation={activeConversation}
+            onBack={handleBack}
+            isOnline={isOtherOnline(activeConversation)}
+          />
+        )}
       </div>
     </div>
   );

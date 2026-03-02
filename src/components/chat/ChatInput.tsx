@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
-import { Send, Image, Video, Paperclip, X, Loader2 } from "lucide-react";
+import { Send, Paperclip, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useModeration } from "@/hooks/useModeration";
 
 interface ChatInputProps {
   onSendMessage: (content: string, type?: string, mediaUrl?: string) => void;
@@ -12,11 +13,21 @@ interface ChatInputProps {
 const ChatInput = ({ onSendMessage, onUploadMedia, disabled }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [moderating, setModerating] = useState(false);
   const [preview, setPreview] = useState<{ url: string; type: string; file: File } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { moderateMessage } = useModeration();
 
   const handleSend = async () => {
     if (preview) {
+      // Moderate caption if present
+      if (message.trim()) {
+        setModerating(true);
+        const allowed = await moderateMessage(message.trim());
+        setModerating(false);
+        if (!allowed) return;
+      }
+
       setUploading(true);
       const mediaUrl = await onUploadMedia(preview.file);
       if (mediaUrl) {
@@ -29,6 +40,11 @@ const ChatInput = ({ onSendMessage, onUploadMedia, disabled }: ChatInputProps) =
     }
 
     if (message.trim()) {
+      setModerating(true);
+      const allowed = await moderateMessage(message.trim());
+      setModerating(false);
+      if (!allowed) return;
+
       onSendMessage(message.trim());
       setMessage("");
     }
@@ -55,6 +71,8 @@ const ChatInput = ({ onSendMessage, onUploadMedia, disabled }: ChatInputProps) =
     
     if (fileRef.current) fileRef.current.value = "";
   };
+
+  const isBusy = disabled || uploading || moderating;
 
   return (
     <div className="border-t border-border bg-card p-2 sm:p-3">
@@ -89,7 +107,7 @@ const ChatInput = ({ onSendMessage, onUploadMedia, disabled }: ChatInputProps) =
           size="icon"
           className="h-9 w-9 flex-shrink-0"
           onClick={() => fileRef.current?.click()}
-          disabled={disabled || uploading}
+          disabled={isBusy}
         >
           <Paperclip className="w-4 h-4" />
         </Button>
@@ -99,7 +117,7 @@ const ChatInput = ({ onSendMessage, onUploadMedia, disabled }: ChatInputProps) =
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type a message..."
-          disabled={disabled || uploading}
+          disabled={isBusy}
           className="min-h-[36px] max-h-32 resize-none text-sm py-2"
           rows={1}
         />
@@ -108,9 +126,9 @@ const ChatInput = ({ onSendMessage, onUploadMedia, disabled }: ChatInputProps) =
           size="icon"
           className="h-9 w-9 flex-shrink-0 rounded-full"
           onClick={handleSend}
-          disabled={disabled || uploading || (!message.trim() && !preview)}
+          disabled={isBusy || (!message.trim() && !preview)}
         >
-          {uploading ? (
+          {uploading || moderating ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             <Send className="w-4 h-4" />
