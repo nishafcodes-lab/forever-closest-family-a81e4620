@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
+import { useNotificationSound } from "@/hooks/useNotificationSound";
 
 export interface AIMessage {
   id: string;
@@ -13,6 +14,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-ai`;
 export const useAIChat = () => {
   const [messages, setMessages] = useState<AIMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { playAISound } = useNotificationSound();
 
   const sendMessage = useCallback(async (input: string) => {
     const userMsg: AIMessage = {
@@ -143,8 +145,13 @@ export const useAIChat = () => {
       toast.error("Failed to connect to AI assistant");
     }
 
+    // Play sound when AI response is complete
+    if (assistantSoFar) {
+      playAISound();
+    }
+
     setIsLoading(false);
-  }, [messages]);
+  }, [messages, playAISound]);
 
   const clearMessages = useCallback(() => setMessages([]), []);
 
