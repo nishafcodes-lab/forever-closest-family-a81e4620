@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
+import { useNotificationSound } from "@/hooks/useNotificationSound";
 
 export interface AIMessage {
   id: string;

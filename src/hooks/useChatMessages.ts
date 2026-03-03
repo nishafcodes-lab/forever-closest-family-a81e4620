@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotificationSound } from "@/hooks/useNotificationSound";
 
 export interface ChatMessage {
   id: string;
@@ -18,6 +19,7 @@ export const useChatMessages = (conversationId: string | null) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
+  const { playMessageSound } = useNotificationSound();
 
   const fetchMessages = useCallback(async () => {
     if (!conversationId) {
@@ -99,6 +101,11 @@ export const useChatMessages = (conversationId: string | null) => {
           };
 
           setMessages(prev => [...prev, enrichedMsg]);
+
+          // Play notification sound for messages from others
+          if (newMsg.sender_id !== user?.id) {
+            playMessageSound();
+          }
 
           // Mark as read if this window is focused
           if (user && document.hasFocus()) {
