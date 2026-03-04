@@ -1,9 +1,10 @@
-import { GraduationCap } from "lucide-react";
-import { useEffect, useState, memo, useCallback } from "react";
+import { GraduationCap, Image, ImageOff } from "lucide-react";
+import { useEffect, useState, useMemo, memo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { AnimatedSection, StaggerContainer, StaggerItem } from "@/components/ui/animated-section";
 import { SkeletonTeacherCard } from "@/components/ui/skeleton-card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Teacher {
   id: string;
@@ -19,6 +20,7 @@ const defaultEmojis = ["👔", "📚", "💫", "🌟", "✨", "🏆", "🎯", "�
 const TeachersSection = memo(() => {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
+  const [photoFilter, setPhotoFilter] = useState<string>("all");
 
   const fetchTeachers = useCallback(async () => {
     const { data, error } = await supabase
@@ -36,11 +38,16 @@ const TeachersSection = memo(() => {
     fetchTeachers();
   }, [fetchTeachers]);
 
+  const filteredTeachers = useMemo(() => {
+    if (photoFilter === "all") return teachers;
+    if (photoFilter === "has-photo") return teachers.filter(t => !!t.photo_url);
+    return teachers.filter(t => !t.photo_url);
+  }, [teachers, photoFilter]);
+
   const getEmoji = (index: number) => defaultEmojis[index % defaultEmojis.length];
 
   return (
     <section id="teachers" className="py-16 sm:py-24 relative overflow-hidden">
-      {/* Background decoration */}
       <div className="absolute top-1/2 left-0 w-40 sm:w-80 h-40 sm:h-80 bg-secondary/5 rounded-full blur-3xl -translate-x-1/2" />
       <div className="absolute top-1/2 right-0 w-40 sm:w-80 h-40 sm:h-80 bg-primary/5 rounded-full blur-3xl translate-x-1/2" />
       
@@ -56,9 +63,26 @@ const TeachersSection = memo(() => {
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-3 sm:mb-4">
             Teachers & Mentors
           </h2>
-          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-2">
+          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-2 mb-6">
             The guiding lights who shaped our journey and made us who we are today
           </p>
+
+          {/* Photo Filter */}
+          <div className="flex justify-center">
+            <Select value={photoFilter} onValueChange={setPhotoFilter}>
+              <SelectTrigger className="w-48 h-10">
+                <div className="flex items-center gap-2">
+                  <Image className="w-4 h-4 text-muted-foreground" />
+                  <SelectValue placeholder="All Teachers" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Teachers ({teachers.length})</SelectItem>
+                <SelectItem value="has-photo">With Photo ({teachers.filter(t => !!t.photo_url).length})</SelectItem>
+                <SelectItem value="no-photo">Without Photo ({teachers.filter(t => !t.photo_url).length})</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </AnimatedSection>
 
         {loading ? (
@@ -67,13 +91,15 @@ const TeachersSection = memo(() => {
               <SkeletonTeacherCard key={i} />
             ))}
           </div>
-        ) : teachers.length === 0 ? (
+        ) : filteredTeachers.length === 0 ? (
           <AnimatedSection className="text-center text-muted-foreground">
-            <p className="text-sm sm:text-base">No teachers added yet. Check back soon!</p>
+            <p className="text-sm sm:text-base">
+              {photoFilter !== "all" ? "No teachers match this filter." : "No teachers added yet. Check back soon!"}
+            </p>
           </AnimatedSection>
         ) : (
           <StaggerContainer className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-            {teachers.map((teacher, index) => (
+            {filteredTeachers.map((teacher, index) => (
               <StaggerItem key={teacher.id}>
                 <motion.div
                   className="group glass-card rounded-xl sm:rounded-2xl p-4 sm:p-6 card-shadow h-full"
