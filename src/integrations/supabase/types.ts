@@ -339,6 +339,47 @@ export type Database = {
         }
         Relationships: []
       }
+      student_status: {
+        Row: {
+          company: string | null
+          id: string
+          job_title: string | null
+          location: string | null
+          status_type: string
+          student_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          company?: string | null
+          id?: string
+          job_title?: string | null
+          location?: string | null
+          status_type?: string
+          student_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          company?: string | null
+          id?: string
+          job_title?: string | null
+          location?: string | null
+          status_type?: string
+          student_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_status_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           batch: string
