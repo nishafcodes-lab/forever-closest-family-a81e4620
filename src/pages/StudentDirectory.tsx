@@ -160,7 +160,7 @@ const StudentDirectory = () => {
 
   const canEditStatus = (student: Student) => {
     if (!user) return false;
-    if (role === "admin") return true;
+    if (isAdmin) return true;
     // Check if this student's email matches the logged-in user's email
     return !!student.email && student.email === user.email;
   };
