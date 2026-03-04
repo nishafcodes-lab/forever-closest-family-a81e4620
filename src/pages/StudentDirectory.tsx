@@ -38,7 +38,7 @@ interface StudentStatus {
 const STATUS_OPTIONS = ["Employed", "Studying", "Freelancing", "Internship", "Business", "Job Seeking", "Not Updated"];
 
 const StudentDirectory = () => {
-  const { user, role } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [statuses, setStatuses] = useState<Record<string, StudentStatus>>({});
   const [loading, setLoading] = useState(true);
