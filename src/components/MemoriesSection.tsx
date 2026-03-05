@@ -1,10 +1,17 @@
-import { Camera, Image, RefreshCw } from "lucide-react";
+import { Camera, Image, RefreshCw, Download, Filter } from "lucide-react";
 import { useEffect, useState, memo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { AnimatedSection, StaggerContainer, StaggerItem } from "@/components/ui/animated-section";
 import { SkeletonPhoto } from "@/components/ui/skeleton-card";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +23,7 @@ interface GalleryPhoto {
   title: string | null;
   description: string | null;
   category: string | null;
+  uploaded_by: string | null;
 }
 
 const categories = [
@@ -27,11 +35,15 @@ const categories = [
 ];
 
 const MemoriesSection = memo(() => {
+  const { user, isAdmin } = useAuth();
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<GalleryPhoto | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showMyUploads, setShowMyUploads] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadingAll, setDownloadingAll] = useState(false);
   const isFirstLoad = useRef(true);
   const { toast } = useToast();
 
@@ -50,16 +62,11 @@ const MemoriesSection = memo(() => {
   useEffect(() => {
     fetchPhotos();
 
-    // Subscribe to realtime updates
     const channel = supabase
       .channel("gallery_changes")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "gallery",
-        },
+        { event: "*", schema: "public", table: "gallery" },
         () => {
           if (!isFirstLoad.current) {
             setIsUpdating(true);
@@ -75,7 +82,6 @@ const MemoriesSection = memo(() => {
       )
       .subscribe();
 
-    // Mark first load as complete after initial fetch
     const timer = setTimeout(() => {
       isFirstLoad.current = false;
     }, 1000);
@@ -90,13 +96,58 @@ const MemoriesSection = memo(() => {
     return photos.filter((p) => p.category === categoryName).length;
   }, [photos]);
 
-  const filteredPhotos = selectedCategory
-    ? photos.filter((p) => p.category === selectedCategory)
-    : photos;
+  const filteredPhotos = photos.filter((p) => {
+    const matchesCategory = !selectedCategory || p.category === selectedCategory;
+    const matchesUser = !showMyUploads || p.uploaded_by === user?.id;
+    return matchesCategory && matchesUser;
+  });
+
+  const handleDownloadSingle = async (photo: GalleryPhoto) => {
+    try {
+      setDownloading(true);
+      const response = await fetch(photo.photo_url);
+      const blob = await response.blob();
+      const ext = photo.photo_url.split('.').pop()?.split('?')[0] || 'jpg';
+      const filename = `${photo.title || photo.id}.${ext}`;
+      saveAs(blob, filename);
+    } catch {
+      toast({ title: "Download failed", variant: "destructive" });
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleDownloadAll = async () => {
+    try {
+      setDownloadingAll(true);
+      const zip = new JSZip();
+      const folder = zip.folder("gallery");
+
+      for (let i = 0; i < filteredPhotos.length; i++) {
+        const photo = filteredPhotos[i];
+        try {
+          const response = await fetch(photo.photo_url);
+          const blob = await response.blob();
+          const ext = photo.photo_url.split('.').pop()?.split('?')[0] || 'jpg';
+          const filename = `${photo.title || `photo-${i + 1}`}.${ext}`;
+          folder?.file(filename, blob);
+        } catch {
+          // Skip failed downloads
+        }
+      }
+
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, "gallery-photos.zip");
+      toast({ title: `Downloaded ${filteredPhotos.length} photos` });
+    } catch {
+      toast({ title: "Bulk download failed", variant: "destructive" });
+    } finally {
+      setDownloadingAll(false);
+    }
+  };
 
   return (
     <section id="memories" className="py-16 sm:py-24 relative overflow-hidden">
-      {/* Realtime update indicator */}
       <AnimatePresence>
         {isUpdating && (
           <motion.div
@@ -111,7 +162,6 @@ const MemoriesSection = memo(() => {
         )}
       </AnimatePresence>
 
-      {/* Background decoration */}
       <div className="absolute top-1/3 right-0 w-40 sm:w-80 h-40 sm:h-80 bg-accent/5 rounded-full blur-3xl" />
       <div className="absolute bottom-1/3 left-0 w-40 sm:w-80 h-40 sm:h-80 bg-primary/5 rounded-full blur-3xl" />
       
@@ -132,7 +182,43 @@ const MemoriesSection = memo(() => {
           </p>
         </AnimatedSection>
 
-        {/* Category Filter - Scrollable on mobile */}
+        {/* Filter Controls */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div className="flex items-center gap-4">
+            {user && (
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="my-uploads"
+                  checked={showMyUploads}
+                  onCheckedChange={setShowMyUploads}
+                />
+                <Label htmlFor="my-uploads" className="text-sm cursor-pointer">
+                  My Uploads
+                </Label>
+              </div>
+            )}
+            {(showMyUploads || selectedCategory) && (
+              <Badge variant="secondary" className="text-xs">
+                {filteredPhotos.length} photos
+              </Badge>
+            )}
+          </div>
+
+          {isAdmin && filteredPhotos.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadAll}
+              disabled={downloadingAll}
+              className="gap-2"
+            >
+              <Download className="w-4 h-4" />
+              {downloadingAll ? "Downloading..." : `Download All (${filteredPhotos.length})`}
+            </Button>
+          )}
+        </div>
+
+        {/* Category Filter */}
         <div className="mb-8 sm:mb-12 -mx-4 px-4 sm:mx-0 sm:px-0">
           <StaggerContainer className="flex sm:grid sm:grid-cols-5 gap-3 sm:gap-4 overflow-x-auto sm:overflow-visible pb-2 sm:pb-0 snap-x snap-mandatory">
             {categories.map((category) => {
@@ -191,10 +277,10 @@ const MemoriesSection = memo(() => {
                 <Image className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
               </motion.div>
               <h3 className="font-display text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">
-                {selectedCategory ? `No ${selectedCategory} photos yet` : "Gallery Coming Soon"}
+                {showMyUploads ? "No uploads from you yet" : selectedCategory ? `No ${selectedCategory} photos yet` : "Gallery Coming Soon"}
               </h3>
               <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto">
-                We're collecting precious memories from our batch. Share your photos to be featured here!
+                {showMyUploads ? "Photos you upload will appear here." : "We're collecting precious memories from our batch. Share your photos to be featured here!"}
               </p>
             </motion.div>
           </AnimatedSection>
@@ -212,7 +298,6 @@ const MemoriesSection = memo(() => {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.3) }}
-                  onClick={() => setSelectedPhoto(photo)}
                   className="group relative aspect-[4/3] sm:aspect-square rounded-lg sm:rounded-xl overflow-hidden cursor-pointer card-shadow"
                   whileHover={{ y: -4, boxShadow: "var(--shadow-hover)" }}
                 >
@@ -221,8 +306,9 @@ const MemoriesSection = memo(() => {
                     alt={photo.title || "Gallery photo"}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     loading="lazy"
+                    onClick={() => setSelectedPhoto(photo)}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                     <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4">
                       <p className="text-white font-medium text-xs sm:text-base truncate">{photo.title || "Untitled"}</p>
                       {photo.category && (
@@ -230,6 +316,16 @@ const MemoriesSection = memo(() => {
                       )}
                     </div>
                   </div>
+                  {/* Admin download button */}
+                  {isAdmin && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDownloadSingle(photo); }}
+                      className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm text-foreground rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      title="Download"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -251,8 +347,8 @@ const MemoriesSection = memo(() => {
                   alt={selectedPhoto.title || "Gallery photo"}
                   className="w-full max-h-[70vh] sm:max-h-[80vh] object-contain"
                 />
-                {(selectedPhoto.title || selectedPhoto.description) && (
-                  <div className="p-3 sm:p-4 bg-card">
+                <div className="p-3 sm:p-4 bg-card flex items-center justify-between">
+                  <div>
                     {selectedPhoto.title && (
                       <h3 className="font-display text-base sm:text-lg font-semibold">{selectedPhoto.title}</h3>
                     )}
@@ -260,7 +356,19 @@ const MemoriesSection = memo(() => {
                       <p className="text-sm text-muted-foreground mt-1">{selectedPhoto.description}</p>
                     )}
                   </div>
-                )}
+                  {isAdmin && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownloadSingle(selectedPhoto)}
+                      disabled={downloading}
+                      className="gap-2 flex-shrink-0"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download
+                    </Button>
+                  )}
+                </div>
               </motion.div>
             )}
           </DialogContent>

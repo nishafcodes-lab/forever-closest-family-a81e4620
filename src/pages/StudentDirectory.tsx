@@ -419,9 +419,9 @@ const StudentDirectory = () => {
                   onClick={() => openStudentModal(student)}
                 >
                   <div className="bg-card rounded-2xl border border-border p-6 h-full transition-all duration-300 hover:shadow-lg hover:border-primary/30 hover:-translate-y-1">
-                    <div className="relative w-24 h-24 mx-auto mb-4">
+                    <div className="relative w-28 h-28 mx-auto mb-4">
                       {student.photo_url ? (
-                        <img src={student.photo_url} alt={student.name} className="w-full h-full rounded-full object-cover border-4 border-background shadow-md" />
+                        <img src={student.photo_url} alt={student.name} className="w-full h-full rounded-full object-contain bg-muted border-4 border-background shadow-md" />
                       ) : (
                         <div className="w-full h-full rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center text-4xl border-4 border-background shadow-md">
                           {student.name.charAt(0).toUpperCase()}
@@ -481,7 +481,7 @@ const StudentDirectory = () => {
                 >
                   <div className="w-14 h-14 flex-shrink-0">
                     {student.photo_url ? (
-                      <img src={student.photo_url} alt={student.name} className="w-full h-full rounded-full object-cover border-2 border-background shadow-sm" />
+                      <img src={student.photo_url} alt={student.name} className="w-full h-full rounded-full object-contain bg-muted border-2 border-background shadow-sm" />
                     ) : (
                       <div className="w-full h-full rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center text-xl border-2 border-background">
                         {student.name.charAt(0).toUpperCase()}
@@ -538,9 +538,9 @@ const StudentDirectory = () => {
                 </DialogHeader>
 
                 <div className="flex flex-col items-center pt-4">
-                  <div className="relative w-32 h-32 mb-6">
+                  <div className="relative w-36 h-36 mb-6">
                     {selectedStudent.photo_url ? (
-                      <img src={selectedStudent.photo_url} alt={selectedStudent.name} className="w-full h-full rounded-full object-cover border-4 border-primary/20 shadow-xl" />
+                      <img src={selectedStudent.photo_url} alt={selectedStudent.name} className="w-full h-full rounded-full object-contain bg-muted border-4 border-primary/20 shadow-xl" />
                     ) : (
                       <div className="w-full h-full rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center text-5xl border-4 border-primary/20 shadow-xl">
                         {selectedStudent.name.charAt(0).toUpperCase()}
