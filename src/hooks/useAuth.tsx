@@ -11,6 +11,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isTeacher: boolean;
   userRole: UserRole;
+  profileStatus: string;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -23,6 +24,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<UserRole>("user");
+  const [profileStatus, setProfileStatus] = useState<string>("pending");
 
   const isAdmin = userRole === "admin";
   const isTeacher = userRole === "teacher";
@@ -35,7 +37,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .order("created_at", { ascending: true });
     
     if (data && data.length > 0) {
-      // Priority: admin > teacher > user
       const roles = data.map(r => r.role as string);
       if (roles.includes("admin")) {
         setUserRole("admin");
@@ -49,6 +50,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const fetchProfileStatus = async (userId: string) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("status")
+      .eq("user_id", userId)
+      .maybeSingle();
+    
+    if (data) {
+      setProfileStatus(data.status || "pending");
+    }
+  };
+
   const createProfileIfNeeded = async (userId: string, email: string) => {
     const { data: existingProfile } = await supabase
       .from("profiles")
@@ -58,14 +71,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     if (!existingProfile) {
       const pendingName = localStorage.getItem("pending_display_name");
+      const pendingRole = localStorage.getItem("pending_role");
       const displayName = pendingName || email.split("@")[0];
+      const role = pendingRole || "student";
       
       await supabase.from("profiles").insert({
         user_id: userId,
         display_name: displayName,
+        role: role,
+        status: "pending",
       });
       
+      // Also create user_role entry based on selected role
+      if (pendingRole === "teacher") {
+        await supabase.from("user_roles").insert({
+          user_id: userId,
+          role: "user" as any, // Default to user, admin will upgrade
+        });
+      }
+      
       localStorage.removeItem("pending_display_name");
+      localStorage.removeItem("pending_role");
+      setProfileStatus("pending");
+    } else {
+      await fetchProfileStatus(userId);
     }
   };
 
@@ -82,6 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }, 0);
         } else {
           setUserRole("user");
+          setProfileStatus("pending");
         }
         
         setLoading(false);
@@ -125,10 +155,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     await supabase.auth.signOut();
     setUserRole("user");
+    setProfileStatus("pending");
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, isTeacher, userRole, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, isTeacher, userRole, profileStatus, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

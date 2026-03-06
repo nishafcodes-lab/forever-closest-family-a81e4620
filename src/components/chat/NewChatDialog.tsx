@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,6 +14,7 @@ interface Profile {
   user_id: string;
   display_name: string;
   avatar_url: string | null;
+  role: string;
 }
 
 interface NewChatDialogProps {
@@ -35,12 +37,14 @@ const NewChatDialog = ({ open, onOpenChange, onSelectUser, onCreateGroup }: NewC
     
     const fetchProfiles = async () => {
       setLoading(true);
+      // Only fetch approved users
       const { data } = await supabase
         .from("profiles")
-        .select("user_id, display_name, avatar_url")
+        .select("user_id, display_name, avatar_url, role")
+        .eq("status", "approved")
         .neq("user_id", user?.id || "");
       
-      if (data) setProfiles(data);
+      if (data) setProfiles(data as Profile[]);
       setLoading(false);
     };
 
@@ -73,9 +77,14 @@ const NewChatDialog = ({ open, onOpenChange, onSelectUser, onCreateGroup }: NewC
     }
   };
 
+  const getRoleBadge = (role: string) => {
+    if (role === "teacher") return <Badge variant="outline" className="text-xs ml-2 text-primary border-primary/30">Teacher</Badge>;
+    return <Badge variant="outline" className="text-xs ml-2">Student</Badge>;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="font-display">New Chat</DialogTitle>
         </DialogHeader>
@@ -117,10 +126,11 @@ const NewChatDialog = ({ open, onOpenChange, onSelectUser, onCreateGroup }: NewC
                     </AvatarFallback>
                   </Avatar>
                   <span className="text-sm font-medium">{profile.display_name}</span>
+                  {getRoleBadge(profile.role)}
                 </button>
               ))}
               {filtered.length === 0 && !loading && (
-                <p className="text-sm text-muted-foreground text-center py-8">No users found</p>
+                <p className="text-sm text-muted-foreground text-center py-8">No approved users found</p>
               )}
             </ScrollArea>
           </TabsContent>
@@ -147,6 +157,7 @@ const NewChatDialog = ({ open, onOpenChange, onSelectUser, onCreateGroup }: NewC
                     </AvatarFallback>
                   </Avatar>
                   <span className="text-sm font-medium flex-1 text-left">{profile.display_name}</span>
+                  {getRoleBadge(profile.role)}
                   {selectedUsers.includes(profile.user_id) && (
                     <Check className="w-4 h-4 text-primary" />
                   )}

@@ -6,8 +6,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, Lock, User, ArrowLeft } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowLeft, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const emailSchema = z.string().email("Invalid email address").max(255);
@@ -19,8 +20,9 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [selectedRole, setSelectedRole] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string; role?: string }>({});
   
   const { signIn, signUp, user, userRole } = useAuth();
   const navigate = useNavigate();
@@ -28,7 +30,6 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
-      // Redirect based on role after login
       if (userRole === "admin") {
         navigate("/admin");
       } else if (userRole === "teacher") {
@@ -56,6 +57,9 @@ const Auth = () => {
       const nameResult = nameSchema.safeParse(displayName);
       if (!nameResult.success) {
         newErrors.name = nameResult.error.errors[0].message;
+      }
+      if (!selectedRole) {
+        newErrors.role = "Please select your role";
       }
     }
     
@@ -100,6 +104,10 @@ const Auth = () => {
           });
         }
       } else {
+        // Store role and name for profile creation
+        localStorage.setItem("pending_display_name", displayName);
+        localStorage.setItem("pending_role", selectedRole);
+        
         const { error } = await signUp(email, password);
         if (error) {
           if (error.message.includes("already registered")) {
@@ -116,11 +124,9 @@ const Auth = () => {
             });
           }
         } else {
-          // Store display name in localStorage temporarily
-          localStorage.setItem("pending_display_name", displayName);
           toast({
             title: "Account Created!",
-            description: "Please check your email to verify your account.",
+            description: "Please check your email to verify your account. Your account will be activated after admin approval.",
           });
         }
       }
@@ -168,25 +174,51 @@ const Auth = () => {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
+                className="space-y-4"
               >
-                <Label htmlFor="name" className="text-sm font-medium">
-                  Display Name
-                </Label>
-                <div className="relative mt-1">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Your name"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    className="pl-10"
-                    disabled={loading}
-                  />
+                <div>
+                  <Label htmlFor="name" className="text-sm font-medium">
+                    Display Name
+                  </Label>
+                  <div className="relative mt-1">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="Your name"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="pl-10"
+                      disabled={loading}
+                    />
+                  </div>
+                  {errors.name && (
+                    <p className="text-xs text-destructive mt-1">{errors.name}</p>
+                  )}
                 </div>
-                {errors.name && (
-                  <p className="text-xs text-destructive mt-1">{errors.name}</p>
-                )}
+
+                <div>
+                  <Label htmlFor="role" className="text-sm font-medium">
+                    Role
+                  </Label>
+                  <div className="relative mt-1">
+                    <Select value={selectedRole} onValueChange={setSelectedRole} disabled={loading}>
+                      <SelectTrigger className="w-full">
+                        <div className="flex items-center gap-2">
+                          <GraduationCap className="w-4 h-4 text-muted-foreground" />
+                          <SelectValue placeholder="Select your role" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="student">Student</SelectItem>
+                        <SelectItem value="teacher">Teacher</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {errors.role && (
+                    <p className="text-xs text-destructive mt-1">{errors.role}</p>
+                  )}
+                </div>
               </motion.div>
             )}
 
@@ -244,12 +276,19 @@ const Auth = () => {
             </Button>
           </form>
 
+          {!isLogin && (
+            <p className="text-xs text-muted-foreground text-center mt-3">
+              Your account will need admin approval before you can access the chat.
+            </p>
+          )}
+
           <div className="mt-6 text-center">
             <button
               type="button"
               onClick={() => {
                 setIsLogin(!isLogin);
                 setErrors({});
+                setSelectedRole("");
               }}
               className="text-sm text-primary hover:underline"
             >
