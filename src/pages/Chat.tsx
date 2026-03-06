@@ -3,14 +3,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { useConversations } from "@/hooks/useConversations";
 import { usePresence } from "@/hooks/usePresence";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Loader2 } from "lucide-react";
+import { Loader2, ShieldAlert } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import ChatSidebar from "@/components/chat/ChatSidebar";
 import ChatWindow from "@/components/chat/ChatWindow";
 import AIChatWindow from "@/components/chat/AIChatWindow";
 
 const Chat = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, profileStatus, isAdmin } = useAuth();
   const isMobile = useIsMobile();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [showAIChat, setShowAIChat] = useState(false);
@@ -101,6 +103,26 @@ const Chat = () => {
   }
 
   if (!user) return null;
+
+  // Block unapproved users (admins always have access)
+  if (!isAdmin && profileStatus !== "approved") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="text-center max-w-md">
+          <ShieldAlert className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h2 className="font-display text-xl font-bold mb-2">Account Pending Approval</h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            {profileStatus === "rejected"
+              ? "Your account has been rejected by the admin. Please contact the administrator for more information."
+              : "Your account is awaiting admin approval. You'll be able to access the chat once approved."}
+          </p>
+          <Link to="/">
+            <Button variant="outline">Back to Home</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex bg-background">

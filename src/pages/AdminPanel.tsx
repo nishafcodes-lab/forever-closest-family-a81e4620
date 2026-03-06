@@ -13,6 +13,7 @@ import VideosTab from "@/components/admin/VideosTab";
 import ReunionTab from "@/components/admin/ReunionTab";
 import EmailTab from "@/components/admin/EmailTab";
 import ChatManagementTab from "@/components/admin/ChatManagementTab";
+import UsersTab from "@/components/admin/UsersTab";
 
 const AdminPanel = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
@@ -37,6 +38,7 @@ const AdminPanel = () => {
   const renderTab = () => {
     switch (activeTab) {
       case "dashboard": return <DashboardTab />;
+      case "users": return <UsersTab />;
       case "teachers": return <TeachersTab />;
       case "students": return <StudentsTab />;
       case "groups": return <GroupsTab />;
@@ -53,7 +55,7 @@ const AdminPanel = () => {
   return (
     <div className="min-h-screen bg-background flex">
       <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} />
-      <main className="flex-1 p-8 overflow-auto">
+      <main className="flex-1 p-4 md:p-8 overflow-auto">
         {renderTab()}
       </main>
     </div>
